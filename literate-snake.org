@@ -1,0 +1,13 @@
+#+AUTHOR: Jonathan Kenyon
+#+TITLE: Literate Programming Example -- Snake
+#+OPTIONS: H:3 toc:2
+#+STARTUP: overview
+#+MACRO: setup-file (eval (if (eq org-export-current-backend 'html) "#+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-bigblow.setup"))
+{{{setup-file}}}
+
+# Local Variables:
+# eval: (add-hook 'after-save-hook (lambda () (setq-local filename (org-html-export-to-html)) (rename-file filename "docs/index.html" t)) 0 t)
+# End:
+ 
+* Purpose
+  This document is an attempt at putting a complete Bevy game and Design Document in a single file
