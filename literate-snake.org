@@ -15,6 +15,6 @@
   We will be creating a document based on [[https://mbuffett.com/posts/bevy-snake-tutorial/][this tutorial]]
 
 ** Why?
-   The reason for this workflow is to keep all our documentation and code in a single place.
+   The reason for this workflow is to keep all our documentation and code in a single place. It's practice for creating a living org doc that will be my standard for creating projects in the future.
 
    That is, the code for this project is pulled directly from this document using ~org-babel~
