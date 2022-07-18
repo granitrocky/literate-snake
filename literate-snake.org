@@ -10,4 +10,11 @@
 # End:
  
 * Purpose
-  This document is an attempt at putting a complete Bevy game and Design Document in a single file
+  This document is an attempt at putting a complete Bevy game and Design Document in a single file.
+
+  We will be creating a document based on [[https://mbuffett.com/posts/bevy-snake-tutorial/][this tutorial]]
+
+** Why?
+   The reason for this workflow is to keep all our documentation and code in a single place.
+
+   That is, the code for this project is pulled directly from this document using ~org-babel~
