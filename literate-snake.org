@@ -6,9 +6,9 @@
 {{{setup-file}}}
 
 # Local Variables:
-# eval: (add-hook 'after-save-hook (lambda () (setq-local filename (org-html-export-to-html)) (rename-file filename "docs/index.html" t)) 0 t)
+# eval: (add-hook 'after-save-hook (lambda () (setq-local filename (org-html-export-to-html t)) (rename-file filename "docs/index.html" t)) 0 t)
 # End:
- 
+
 * Purpose
   This document is an attempt at putting a complete Bevy game and Design Document in a single file.
 
@@ -18,3 +18,8 @@
    The reason for this workflow is to keep all our documentation and code in a single place. It's practice for creating a living org doc that will be my standard for creating projects in the future.
 
    That is, the code for this project is pulled directly from this document using ~org-babel~
+
+* Specifications
+
+* Code
+  
