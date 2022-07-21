@@ -1,12 +1,13 @@
 #+AUTHOR: Jonathan Kenyon
 #+TITLE: Literate Programming Example -- Snake
 #+OPTIONS: H:3 toc:2
+#+HTML_HEAD: <style>canvas { margin-left: auto; margin-right: auto; display: block; } </style>
 #+STARTUP: overview
 #+MACRO: setup-file (eval (if (eq org-export-current-backend 'html) "#+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-bigblow.setup"))
 {{{setup-file}}}
 
 # Local Variables:
-# eval: (add-hook 'after-save-hook (lambda () (setq-local filename (org-html-export-to-html t)) (rename-file filename "docs/index.html" t)) 0 t)
+# eval: (add-hook 'after-save-hook (lambda () (setq-local filename (org-html-export-to-html)) (rename-file filename "docs/index.html" t)) 0 t)
 # End:
 
 * Purpose
@@ -19,7 +20,151 @@
 
    That is, the code for this project is pulled directly from this document using ~org-babel~
 
+** Final Program
+  #+begin_src raw-html
+     <script type="module">
+       import init from './literate-snake.js'
+       init()
+     </script>
+   #+end_src
+   
 * Specifications
 
+** Use Bevy
+   In our [[*Cargo File \[2022-07-19 Tue\]][Cargo File]], we define Bevy 0.7 as a dependency. Bevy allows us to create a game using ECS and built in 2D and 3D renderers and compile it to wasm32 for web games. In our case, we will be making a 2D snake game and embedding it in this file.
+   
+** Show a snake
+   We will use the ~SnakeHead~ struct to hold the head of the body. 
+** Move the snake
+   The snake will always move forward, and pressing a key changes the direction.
+
+   You will only be able to choose from the 2 directions to the left and right of the current heading
+** Put the snake on a grid
+   The snake needs to be confined to a grid for movement to replicate the original snake game
+** Accept User input
+   The only user input we need for now is the arrow keys. 
+** Grow the snake when it collects pellets
+   Add a struct called ~SnakeTail~ that holds a single position
+** End the game if the snake hits a wall or its tail
+
+** OPTIONAL Keep a score
+
 * Code
-  
+** Cargo File   [2022-07-19 Tue]                                       :Code:
+   #+begin_src conf-toml :tangle "Cargo.toml"
+     [package]
+     name = "literate-snake"
+     version = "0.1.0"
+     edition = "2021"
+
+     [profile.release]
+     opt-level = "z"
+     lto = "thin"
+
+     [profile.dev]
+     opt-level = 1
+
+     [profile.dev.package."*"]
+     opt-level = 3
+
+     [dependencies]
+     bevy = "0.7"
+     rand = "0.7.3"
+
+     [target.wasm32-unknown-unknown]
+     runner = "wasm-server-runner"
+   #+end_src 
+** Start The Game   [2022-07-19 Tue]                                   :Code:
+   #+begin_src rust :tangle "src/main.rs"
+     use bevy::prelude::*;
+
+     fn main() {
+         App::new()
+             .insert_resource(WindowDescriptor {
+                 width: 640.,
+                 height: 480.,
+                 ..default()
+             })
+             .add_startup_system(setup_camera)
+             .add_startup_system(spawn_snake)
+             .add_system(snake_movement)
+             .add_plugins(DefaultPlugins)
+             .run();
+     }
+   #+end_src 
+** Setup Camera   [2022-07-21 Thu]                                     :Code:
+   #+begin_src rust :tangle "src/main.rs" :mkdirp yes :comments both
+     fn setup_camera(mut commands: Commands){
+         commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+     }
+   #+end_src 
+** Create Snake   [2022-07-21 Thu]                                     :Code:
+   #+begin_src rust :tangle "src/main.rs" :mkdirp yes :comments both
+     #[derive(Component)]
+     struct SnakeHead;
+
+     const SNAKE_HEAD_COLOR: Color = Color::rgb(0.7, 0.7, 0.7);
+
+     fn spawn_snake(mut commands: Commands) {
+         commands
+             .spawn_bundle(SpriteBundle {
+                 sprite: Sprite {
+                     color: SNAKE_HEAD_COLOR,
+                     ..default()
+                 },
+                 transform: Transform {
+                     scale: Vec3::new(10.0, 10.0, 10.0),
+                     ..default()
+                 },
+                 ..default()
+             })
+             .insert(SnakeHead);
+     }
+   #+end_src 
+
+** Control Snake   [2022-07-21 Thu]                                    :Code:
+   #+begin_src rust :tangle "src/main.rs" :mkdirp yes :comments both
+     fn snake_movement(
+         keyboard_input: Res<Input<KeyCode>>,
+         mut head_positions: Query<&mut Transform, With<SnakeHead>>,
+     ) {
+         for mut transform in head_positions.iter_mut() {
+             match keyboard_input.get_pressed().next() {
+                 Some(KeyCode::Left) => transform.translation.x -= 2.,
+                 Some(KeyCode::Right) => transform.translation.x += 2.,
+                 Some(KeyCode::Up) => transform.translation.y += 2.,
+                 Some(KeyCode::Down) => transform.translation.y -= 2.,
+                 _ => {}
+             }
+         };
+     }
+   #+end_src 
+   
+** Grid   [2022-07-21 Thu]                                             :Code:
+ #+begin_src rust :tangle "src/main.rs" :mkdirp yes :comments both
+   const ARENA_WIDTH: u32 = 10;
+   const ARENA_HEIGHT: u32 = 10;
+
+   #[derive(Component)]
+   struct Position {
+       x: i32,
+       y: i32,
+   }
+
+   #[derive(Component)]
+   struct Size{
+       width: f32,
+       height: f32,
+   }
+
+   impl Size {
+       pub fn square(x: f32) -> Self{
+           Self{
+               width: x,
+               height: x,
+           }
+       }
+   }
+ #+end_src 
+ 
+ 

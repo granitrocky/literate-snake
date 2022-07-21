@@ -3,12 +3,13 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2022-07-18 Mon 19:22 -->
+<!-- 2022-07-21 Thu 13:12 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Literate Programming Example &#x2013; Snake</title>
 <meta name="generator" content="Org mode" />
 <meta name="author" content="Jonathan Kenyon" />
+<style>canvas { margin-left: auto; margin-right: auto; display: block; } </style>
 <link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/bigblow_theme/css/htmlize.css"/>
 <link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/bigblow_theme/css/bigblow.css"/>
 <link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/bigblow_theme/css/hideshow.css"/>
@@ -50,19 +51,40 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org7020797">1. Purpose</a>
+<li><a href="#orgc10fd0a">1. Purpose</a>
 <ul>
-<li><a href="#org714909b">1.1. Why?</a></li>
+<li><a href="#org60ef413">1.1. Why?</a></li>
+<li><a href="#orgf5ac5da">1.2. Final Program</a></li>
 </ul>
 </li>
-<li><a href="#org05b337a">2. Specifications</a></li>
-<li><a href="#org892e3e1">3. Code</a></li>
+<li><a href="#org7dfd540">2. Specifications</a>
+<ul>
+<li><a href="#org8203ad2">2.1. Use Bevy</a></li>
+<li><a href="#orgfdd3cda">2.2. Show a snake</a></li>
+<li><a href="#org3ea6937">2.3. Move the snake</a></li>
+<li><a href="#org03b0e05">2.4. Put the snake on a grid</a></li>
+<li><a href="#orgf1dea4d">2.5. Accept User input</a></li>
+<li><a href="#orgd703913">2.6. Grow the snake when it collects pellets</a></li>
+<li><a href="#orga3f9bfb">2.7. End the game if the snake hits a wall or its tail</a></li>
+<li><a href="#org55c83ca">2.8. OPTIONAL Keep a score</a></li>
+</ul>
+</li>
+<li><a href="#org8f4eb6c">3. Code</a>
+<ul>
+<li><a href="#orga10fd85">3.1. Cargo File   <span class="timestamp-wrapper"><span class="timestamp">[2022-07-19 Tue]</span></span>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Code">Code</span></span></a></li>
+<li><a href="#orga450ae2">3.2. Start The Game   <span class="timestamp-wrapper"><span class="timestamp">[2022-07-19 Tue]</span></span>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Code">Code</span></span></a></li>
+<li><a href="#orgc9ce52c">3.3. Setup Camera   <span class="timestamp-wrapper"><span class="timestamp">[2022-07-21 Thu]</span></span>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Code">Code</span></span></a></li>
+<li><a href="#orgcbaac26">3.4. Create Snake   <span class="timestamp-wrapper"><span class="timestamp">[2022-07-21 Thu]</span></span>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Code">Code</span></span></a></li>
+<li><a href="#org072e7a6">3.5. Control Snake   <span class="timestamp-wrapper"><span class="timestamp">[2022-07-21 Thu]</span></span>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Code">Code</span></span></a></li>
+<li><a href="#org92c708d">3.6. Grid   <span class="timestamp-wrapper"><span class="timestamp">[2022-07-21 Thu]</span></span>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Code">Code</span></span></a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org7020797" class="outline-2">
-<h2 id="org7020797"><span class="section-number-2">1</span> Purpose</h2>
+<div id="outline-container-orgc10fd0a" class="outline-2">
+<h2 id="orgc10fd0a"><span class="section-number-2">1</span> Purpose</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 This document is an attempt at putting a complete Bevy game and Design Document in a single file.
@@ -73,8 +95,8 @@ We will be creating a document based on <a href="https://mbuffett.com/posts/bevy
 </p>
 </div>
 
-<div id="outline-container-org714909b" class="outline-3">
-<h3 id="org714909b"><span class="section-number-3">1.1</span> Why?</h3>
+<div id="outline-container-org60ef413" class="outline-3">
+<h3 id="org60ef413"><span class="section-number-3">1.1</span> Why?</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
 The reason for this workflow is to keep all our documentation and code in a single place. It's practice for creating a living org doc that will be my standard for creating projects in the future.
@@ -85,19 +107,239 @@ That is, the code for this project is pulled directly from this document using <
 </p>
 </div>
 </div>
+
+<div id="outline-container-orgf5ac5da" class="outline-3">
+<h3 id="orgf5ac5da"><span class="section-number-3">1.2</span> Final Program</h3>
+<div class="outline-text-3" id="text-1-2">
+<script type="module">
+  import init from './literate-snake.js'
+  init()
+</script>
+</div>
+</div>
 </div>
 
-<div id="outline-container-org05b337a" class="outline-2">
-<h2 id="org05b337a"><span class="section-number-2">2</span> Specifications</h2>
+<div id="outline-container-org7dfd540" class="outline-2">
+<h2 id="org7dfd540"><span class="section-number-2">2</span> Specifications</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-org8203ad2" class="outline-3">
+<h3 id="org8203ad2"><span class="section-number-3">2.1</span> Use Bevy</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+In our <a href="#orga10fd85">Cargo File</a>, we define Bevy 0.7 as a dependency. Bevy allows us to create a game using ECS and built in 2D and 3D renderers and compile it to wasm32 for web games. In our case, we will be making a 2D snake game and embedding it in this file.
+</p>
+</div>
 </div>
 
-<div id="outline-container-org892e3e1" class="outline-2">
-<h2 id="org892e3e1"><span class="section-number-2">3</span> Code</h2>
+<div id="outline-container-orgfdd3cda" class="outline-3">
+<h3 id="orgfdd3cda"><span class="section-number-3">2.2</span> Show a snake</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+We will use the <code>SnakeHead</code> struct to hold the head of the body. 
+</p>
+</div>
+</div>
+<div id="outline-container-org3ea6937" class="outline-3">
+<h3 id="org3ea6937"><span class="section-number-3">2.3</span> Move the snake</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+The snake will always move forward, and pressing a key changes the direction.
+</p>
+
+<p>
+You will only be able to choose from the 2 directions to the left and right of the current heading
+</p>
+</div>
+</div>
+<div id="outline-container-org03b0e05" class="outline-3">
+<h3 id="org03b0e05"><span class="section-number-3">2.4</span> Put the snake on a grid</h3>
+<div class="outline-text-3" id="text-2-4">
+<p>
+The snake needs to be confined to a grid for movement to replicate the original snake game
+</p>
+</div>
+</div>
+<div id="outline-container-orgf1dea4d" class="outline-3">
+<h3 id="orgf1dea4d"><span class="section-number-3">2.5</span> Accept User input</h3>
+<div class="outline-text-3" id="text-2-5">
+<p>
+The only user input we need for now is the arrow keys. 
+</p>
+</div>
+</div>
+<div id="outline-container-orgd703913" class="outline-3">
+<h3 id="orgd703913"><span class="section-number-3">2.6</span> Grow the snake when it collects pellets</h3>
+<div class="outline-text-3" id="text-2-6">
+<p>
+Add a struct called <code>SnakeTail</code> that holds a single position
+</p>
+</div>
+</div>
+<div id="outline-container-orga3f9bfb" class="outline-3">
+<h3 id="orga3f9bfb"><span class="section-number-3">2.7</span> End the game if the snake hits a wall or its tail</h3>
+</div>
+
+<div id="outline-container-org55c83ca" class="outline-3">
+<h3 id="org55c83ca"><span class="section-number-3">2.8</span> OPTIONAL Keep a score</h3>
+</div>
+</div>
+
+<div id="outline-container-org8f4eb6c" class="outline-2">
+<h2 id="org8f4eb6c"><span class="section-number-2">3</span> Code</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+<div id="outline-container-orga10fd85" class="outline-3">
+<h3 id="orga10fd85"><span class="section-number-3">3.1</span> Cargo File   <span class="timestamp-wrapper"><span class="timestamp">[2022-07-19 Tue]</span></span>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Code">Code</span></span></h3>
+<div class="outline-text-3" id="text-3-1">
+<div class="org-src-container">
+<pre class="src src-conf-toml">[<span style="color: #d3869b;">package</span>]
+<span style="color: #83a598;">name</span> = <span style="color: #b8bb26;">"literate-snake"</span>
+<span style="color: #83a598;">version</span> = <span style="color: #b8bb26;">"0.1.0"</span>
+<span style="color: #83a598;">edition</span> = <span style="color: #b8bb26;">"2021"</span>
+
+[<span style="color: #d3869b;">profile.release</span>]
+<span style="color: #83a598;">opt-level</span> = <span style="color: #b8bb26;">"z"</span>
+<span style="color: #83a598;">lto</span> = <span style="color: #b8bb26;">"thin"</span>
+
+[<span style="color: #d3869b;">profile.dev</span>]
+<span style="color: #83a598;">opt-level</span> = 1
+
+[<span style="color: #d3869b;">profile.dev.package.</span><span style="color: #d3869b;">"*"</span>]
+<span style="color: #83a598;">opt-level</span> = 3
+
+[<span style="color: #d3869b;">dependencies</span>]
+<span style="color: #83a598;">bevy</span> = <span style="color: #b8bb26;">"0.7"</span>
+<span style="color: #83a598;">rand</span> = <span style="color: #b8bb26;">"0.7.3"</span>
+
+[<span style="color: #d3869b;">target.wasm32-unknown-unknown</span>]
+<span style="color: #83a598;">runner</span> = <span style="color: #b8bb26;">"wasm-server-runner"</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orga450ae2" class="outline-3">
+<h3 id="orga450ae2"><span class="section-number-3">3.2</span> Start The Game   <span class="timestamp-wrapper"><span class="timestamp">[2022-07-19 Tue]</span></span>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Code">Code</span></span></h3>
+<div class="outline-text-3" id="text-3-2">
+<div class="org-src-container">
+<pre class="src src-rust"><span style="color: #fb4933;">use</span> <span style="color: #d3869b;">bevy</span>::<span style="color: #d3869b;">prelude</span>::*;
+
+<span style="color: #fb4933;">fn</span> <span style="color: #fabd2f;">main</span>() {
+    <span style="color: #d3869b;">App</span>::new()
+        .insert_resource(<span style="color: #d3869b;">WindowDescriptor</span> {
+            <span style="color: #83a598;">width</span>: 640.,
+            <span style="color: #83a598;">height</span>: 480.,
+            ..default()
+        })
+        .add_startup_system(setup_camera)
+        .add_startup_system(spawn_snake)
+        .add_system(snake_movement)
+        .add_plugins(<span style="color: #d3869b;">DefaultPlugins</span>)
+        .run();
+}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgc9ce52c" class="outline-3">
+<h3 id="orgc9ce52c"><span class="section-number-3">3.3</span> Setup Camera   <span class="timestamp-wrapper"><span class="timestamp">[2022-07-21 Thu]</span></span>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Code">Code</span></span></h3>
+<div class="outline-text-3" id="text-3-3">
+<div class="org-src-container">
+<pre class="src src-rust"><span style="color: #fb4933;">fn</span> <span style="color: #fabd2f;">setup_camera</span>(<span style="color: #fb4933;">mut</span> <span style="color: #83a598;">commands</span>: <span style="color: #d3869b;">Commands</span>){
+    commands.spawn_bundle(<span style="color: #d3869b;">OrthographicCameraBundle</span>::new_2d());
+}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgcbaac26" class="outline-3">
+<h3 id="orgcbaac26"><span class="section-number-3">3.4</span> Create Snake   <span class="timestamp-wrapper"><span class="timestamp">[2022-07-21 Thu]</span></span>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Code">Code</span></span></h3>
+<div class="outline-text-3" id="text-3-4">
+<div class="org-src-container">
+<pre class="src src-rust"><span style="color: #fe8019;">#[derive(Component)]</span>
+<span style="color: #fb4933;">struct</span> <span style="color: #d3869b;">SnakeHead</span>;
+
+<span style="color: #fb4933;">const</span> <span style="color: #83a598;">SNAKE_HEAD_COLOR</span>: <span style="color: #d3869b;">Color</span> = <span style="color: #d3869b;">Color</span>::rgb(0.7, 0.7, 0.7);
+
+<span style="color: #fb4933;">fn</span> <span style="color: #fabd2f;">spawn_snake</span>(<span style="color: #fb4933;">mut</span> <span style="color: #83a598;">commands</span>: <span style="color: #d3869b;">Commands</span>) {
+    commands
+        .spawn_bundle(<span style="color: #d3869b;">SpriteBundle</span> {
+            <span style="color: #83a598;">sprite</span>: <span style="color: #d3869b;">Sprite</span> {
+                <span style="color: #83a598;">color</span>: <span style="color: #d3869b;">SNAKE_HEAD_COLOR</span>,
+                ..default()
+            },
+            <span style="color: #83a598;">transform</span>: <span style="color: #d3869b;">Transform</span> {
+                <span style="color: #83a598;">scale</span>: <span style="color: #d3869b;">Vec3</span>::new(10.0, 10.0, 10.0),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(<span style="color: #d3869b;">SnakeHead</span>);
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org072e7a6" class="outline-3">
+<h3 id="org072e7a6"><span class="section-number-3">3.5</span> Control Snake   <span class="timestamp-wrapper"><span class="timestamp">[2022-07-21 Thu]</span></span>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Code">Code</span></span></h3>
+<div class="outline-text-3" id="text-3-5">
+<div class="org-src-container">
+<pre class="src src-rust"><span style="color: #fb4933;">fn</span> <span style="color: #fabd2f;">snake_movement</span>(
+    <span style="color: #83a598;">keyboard_input</span>: <span style="color: #d3869b;">Res</span>&lt;<span style="color: #d3869b;">Input</span>&lt;<span style="color: #d3869b;">KeyCode</span>&gt;&gt;,
+    <span style="color: #fb4933;">mut</span> <span style="color: #83a598;">head_positions</span>: <span style="color: #d3869b;">Query</span>&lt;<span style="color: #ebdbb2; background-color: #32302f;">&amp;</span><span style="color: #fb4933;">mut</span> <span style="color: #d3869b;">Transform</span>, <span style="color: #d3869b;">With</span>&lt;<span style="color: #d3869b;">SnakeHead</span>&gt;&gt;,
+) {
+    <span style="color: #fb4933;">for</span> <span style="color: #fb4933;">mut</span> <span style="color: #83a598;">transform</span> <span style="color: #fb4933;">in</span> head_positions.iter_mut() {
+        <span style="color: #fb4933;">match</span> keyboard_input.get_pressed().next() {
+            <span style="color: #d3869b;">Some</span>(<span style="color: #d3869b;">KeyCode</span>::<span style="color: #d3869b;">Left</span>) =&gt; transform.translation.x -= 2.,
+            <span style="color: #d3869b;">Some</span>(<span style="color: #d3869b;">KeyCode</span>::<span style="color: #d3869b;">Right</span>) =&gt; transform.translation.x += 2.,
+            <span style="color: #d3869b;">Some</span>(<span style="color: #d3869b;">KeyCode</span>::<span style="color: #d3869b;">Up</span>) =&gt; transform.translation.y += 2.,
+            <span style="color: #d3869b;">Some</span>(<span style="color: #d3869b;">KeyCode</span>::<span style="color: #d3869b;">Down</span>) =&gt; transform.translation.y -= 2.,
+            _ =&gt; {}
+        }
+    };
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org92c708d" class="outline-3">
+<h3 id="org92c708d"><span class="section-number-3">3.6</span> Grid   <span class="timestamp-wrapper"><span class="timestamp">[2022-07-21 Thu]</span></span>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Code">Code</span></span></h3>
+<div class="outline-text-3" id="text-3-6">
+<div class="org-src-container">
+<pre class="src src-rust"><span style="color: #fb4933;">const</span> <span style="color: #83a598;">ARENA_WIDTH</span>: <span style="color: #d3869b;">u32</span> = 10;
+<span style="color: #fb4933;">const</span> <span style="color: #83a598;">ARENA_HEIGHT</span>: <span style="color: #d3869b;">u32</span> = 10;
+
+<span style="color: #fe8019;">#[derive(Component)]</span>
+<span style="color: #fb4933;">struct</span> <span style="color: #d3869b;">Position</span> {
+    <span style="color: #83a598;">x</span>: <span style="color: #d3869b;">i32</span>,
+    <span style="color: #83a598;">y</span>: <span style="color: #d3869b;">i32</span>,
+}
+
+<span style="color: #fe8019;">#[derive(Component)]</span>
+<span style="color: #fb4933;">struct</span> <span style="color: #d3869b;">Size</span>{
+    <span style="color: #83a598;">width</span>: <span style="color: #d3869b;">f32</span>,
+    <span style="color: #83a598;">height</span>: <span style="color: #d3869b;">f32</span>,
+}
+
+<span style="color: #fb4933;">impl</span> <span style="color: #d3869b;">Size</span> {
+    <span style="color: #fb4933;">pub</span> <span style="color: #fb4933;">fn</span> <span style="color: #fabd2f;">square</span>(<span style="color: #83a598;">x</span>: <span style="color: #d3869b;">f32</span>) -&gt; <span style="color: #d3869b;">Self</span>{
+        <span style="color: #d3869b;">Self</span>{
+            <span style="color: #83a598;">width</span>: x,
+            <span style="color: #83a598;">height</span>: x,
+        }
+    }
+}
+</pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Jonathan Kenyon</p>
-<p class="date">Created: 2022-07-18 Mon 19:22</p>
+<p class="date">Created: 2022-07-21 Thu 13:12</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
