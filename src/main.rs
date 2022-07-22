@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use rand::prelude::FixedTimestep;
 
 fn main() {
     App::new()
@@ -8,6 +9,7 @@ fn main() {
             height: 500.,
             ..default()
         })
+        .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
         .add_startup_system(setup_camera)
         .add_startup_system(spawn_snake)
         .add_system(snake_movement)
@@ -15,7 +17,7 @@ fn main() {
             CoreStage::PostUpdate,
             SystemSet::new()
                 .with_system(size_scaling)
-                .with_system(position_translation)
+                .with_system(position_translation),
         )
         .add_plugins(DefaultPlugins)
         .run();
@@ -128,3 +130,9 @@ fn position_translation(windows: Res<Windows>, mut q: Query<(&Position, &mut Tra
     }
 }
 // Grid   [2022-07-21 Thu]:1 ends here
+
+// Food   [2022-07-22 Fri]                                             :Code:
+
+// [[file:../literate-snake.org::*Food \[2022-07-22 Fri\]][Food   [2022-07-22 Fri]:1]]
+const FOOD_COLOR: Color = Color::rgb(1.0, 1.0, 1.0);
+// Food   [2022-07-22 Fri]:1 ends here
