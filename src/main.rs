@@ -3,8 +3,9 @@ use bevy::prelude::*;
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
-            width: 640.,
-            height: 480.,
+            title: "Snake!".to_string(),
+            width: 500.,
+            height: 500.,
             ..default()
         })
         .add_startup_system(setup_camera)
@@ -13,8 +14,8 @@ fn main() {
         .add_system_set_to_stage(
             CoreStage::PostUpdate,
             SystemSet::new()
+                .with_system(size_scaling)
                 .with_system(position_translation)
-                .with_system(size_scaling),
         )
         .add_plugins(DefaultPlugins)
         .run();
