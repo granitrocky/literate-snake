@@ -78,36 +78,49 @@ If the snake enters a square that is either out of bounds or occupied by another
   [dependencies]
   bevy = "0.7"
   rand = "0.7.3"
+  iyes_loopless = { version = "0.6", features = ["fixedtimestep", "states"] }
 
-  [target.wasm32-unknown-unknown]
-  runner = "wasm-server-runner"
 #+end_src 
 ** Start The Game   [2022-07-19 Tue]                                   :Code:
 #+begin_src rust :tangle "src/main.rs"
-  use bevy::prelude::*;
-  use rand::prelude::FixedTimestep;
+    use bevy::core::FixedTimestep;
+    use bevy::ecs::schedule::ShouldRun;
+    use bevy::prelude::*;
+    use iyes_loopless::prelude::*;
+    use rand::prelude::*;
 
-  fn main() {
-      App::new()
-          .insert_resource(WindowDescriptor {
-              title: "Snake!".to_string(),
-              width: 500.,
-              height: 500.,
-              ..default()
-          })
-          .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
-          .add_startup_system(setup_camera)
-          .add_startup_system(spawn_snake)
-          .add_system(snake_movement)
-          .add_system_set_to_stage(
-              CoreStage::PostUpdate,
-              SystemSet::new()
-                  .with_system(size_scaling)
-                  .with_system(position_translation),
-          )
-          .add_plugins(DefaultPlugins)
-          .run();
-  }
+    fn main() {
+        App::new()
+            .insert_resource(WindowDescriptor {
+                title: "Snake!".to_string(),
+                width: 500.,
+                height: 500.,
+                ..default()
+            })
+            .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
+            .add_startup_system(setup_camera)
+            .add_startup_system(spawn_snake)
+            .add_system(snake_input)
+            .add_system_set(
+                SystemSet::new()
+                    .with_run_criteria(FixedTimestep::steps_per_second(1.0))
+                    .with_system(food_spawner),
+            )
+            .add_system_set(
+                SystemSet::new()
+                    .with_run_criteria(FixedTimestep::steps_per_second(5.0))
+                    .with_system(snake_movement)
+            )
+            .add_system_set_to_stage(
+                CoreStage::PostUpdate,
+                SystemSet::new()
+                    .with_system(size_scaling)
+                    .with_system(position_translation),
+            )
+            .add_plugins(DefaultPlugins)
+            .run();
+            }
+      
 #+end_src 
 ** Setup Camera   [2022-07-21 Thu]                                     :Code:
 #+begin_src rust :tangle "src/main.rs" :mkdirp yes :comments both
@@ -119,6 +132,14 @@ If the snake enters a square that is either out of bounds or occupied by another
 #+begin_src rust :tangle "src/main.rs" :mkdirp yes :comments both
   #[derive(Component)]
   struct SnakeHead;
+
+  #[derive(Component)]
+  enum SnakeDirection{
+      UP,
+      DOWN,
+      LEFT,
+      RIGHT,
+  }
 
   const SNAKE_HEAD_COLOR: Color = Color::rgb(0.7, 0.7, 0.7);
 
@@ -137,25 +158,51 @@ If the snake enters a square that is either out of bounds or occupied by another
           })
           .insert(SnakeHead)
           .insert(Position { x: 3, y: 3 })
-          .insert(Size::square(0.8));
+          .insert(Size::square(0.8))
+          .insert(SnakeDirection::UP);
   }
 #+end_src 
 
 ** Control Snake   [2022-07-21 Thu]                                    :Code:
 #+begin_src rust :tangle "src/main.rs" :mkdirp yes :comments both
-  fn snake_movement(
+  fn snake_input(
       keyboard_input: Res<Input<KeyCode>>,
-      mut head_positions: Query<&mut Position, With<SnakeHead>>,
+      mut head_positions: Query<&mut SnakeDirection, With<SnakeHead>>,
   ) {
-      for mut pos in head_positions.iter_mut() {
+      for mut dir in head_positions.iter_mut() {
           match keyboard_input.get_pressed().next() {
-              Some(KeyCode::Left) => pos.x -= 1,
-              Some(KeyCode::Right) => pos.x += 1,
-              Some(KeyCode::Up) => pos.y += 1,
-              Some(KeyCode::Down) => pos.y -= 1,
+              Some(KeyCode::Left) => match *dir {
+                  SnakeDirection::UP | SnakeDirection::DOWN => *dir = SnakeDirection::LEFT,
+                  _ => {}
+              },
+              Some(KeyCode::Right) => match *dir {
+                  SnakeDirection::UP | SnakeDirection::DOWN => *dir = SnakeDirection::RIGHT,
+                  _ => {}
+              },
+              Some(KeyCode::Up) => match *dir {
+                  SnakeDirection::LEFT | SnakeDirection::RIGHT => *dir = SnakeDirection::UP,
+                  _ => {}
+              },
+              Some(KeyCode::Down) => match *dir {
+                  SnakeDirection::LEFT | SnakeDirection::RIGHT => *dir = SnakeDirection::DOWN,
+                  _ => {}
+              },
               _ => {}
           }
-      };
+      }
+  }
+
+  fn snake_movement(
+      mut head_positions: Query<(&mut Position, &SnakeDirection), With<SnakeHead>>,
+  ) {
+      for (mut pos, dir) in head_positions.iter_mut(){
+          match dir{
+              SnakeDirection::UP => pos.y += 1,
+              SnakeDirection::DOWN => pos.y -= 1,
+              SnakeDirection::LEFT => pos.x -= 1,
+              SnakeDirection::RIGHT => pos.x += 1,
+          }
+      }
   }
 #+end_src 
    
@@ -214,5 +261,30 @@ If the snake enters a square that is either out of bounds or occupied by another
 
 ** Food   [2022-07-22 Fri]                                             :Code:
 #+begin_src rust :tangle "src/main.rs" :mkdirp yes :comments both
-  const FOOD_COLOR: Color = Color::rgb(1.0, 1.0, 1.0); 
+  const FOOD_COLOR: Color = Color::rgb(1.0, 1.0, 1.0);
+
+  #[derive(Component)]
+  struct Food;
+
+  fn food_spawner(mut commands: Commands, food_query: Query<&Food>) {
+      //If we already have a food on the screen, don't create another.
+      if let Ok(_) = food_query.get_single() { return; }
+
+      commands
+          .spawn_bundle(SpriteBundle {
+              sprite: Sprite {
+                  color: FOOD_COLOR,
+                  ..default()
+              },
+              ..default()
+          })
+          .insert(Food)
+          .insert(Position {
+              x: (random::<f32>() * ARENA_WIDTH as f32) as i32,
+              y: (random::<f32>() * ARENA_HEIGHT as f32) as i32,
+          })
+          .insert(Size::square(0.8));
+  }
+
+  fn eat_food(mut commands: Commands, positions_query: Query<&Position>){}
 #+end_src 

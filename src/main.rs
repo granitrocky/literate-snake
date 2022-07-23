@@ -1,5 +1,8 @@
+use bevy::core::FixedTimestep;
+use bevy::ecs::schedule::ShouldRun;
 use bevy::prelude::*;
-use rand::prelude::FixedTimestep;
+use iyes_loopless::prelude::*;
+use rand::prelude::*;
 
 fn main() {
     App::new()
@@ -12,7 +15,17 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
         .add_startup_system(setup_camera)
         .add_startup_system(spawn_snake)
-        .add_system(snake_movement)
+        .add_system(snake_input)
+        .add_system_set(
+            SystemSet::new()
+                .with_run_criteria(FixedTimestep::steps_per_second(1.0))
+                .with_system(food_spawner),
+        )
+        .add_system_set(
+            SystemSet::new()
+                .with_run_criteria(FixedTimestep::steps_per_second(5.0))
+                .with_system(snake_movement)
+        )
         .add_system_set_to_stage(
             CoreStage::PostUpdate,
             SystemSet::new()
@@ -21,7 +34,7 @@ fn main() {
         )
         .add_plugins(DefaultPlugins)
         .run();
-}
+        }
 
 // Setup Camera   [2022-07-21 Thu]                                     :Code:
 
@@ -36,6 +49,14 @@ fn setup_camera(mut commands: Commands){
 // [[file:../literate-snake.org::*Create Snake \[2022-07-21 Thu\]][Create Snake   [2022-07-21 Thu]:1]]
 #[derive(Component)]
 struct SnakeHead;
+
+#[derive(Component)]
+enum SnakeDirection{
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+}
 
 const SNAKE_HEAD_COLOR: Color = Color::rgb(0.7, 0.7, 0.7);
 
@@ -54,26 +75,52 @@ fn spawn_snake(mut commands: Commands) {
         })
         .insert(SnakeHead)
         .insert(Position { x: 3, y: 3 })
-        .insert(Size::square(0.8));
+        .insert(Size::square(0.8))
+        .insert(SnakeDirection::UP);
 }
 // Create Snake   [2022-07-21 Thu]:1 ends here
 
 // Control Snake   [2022-07-21 Thu]                                    :Code:
 
 // [[file:../literate-snake.org::*Control Snake \[2022-07-21 Thu\]][Control Snake   [2022-07-21 Thu]:1]]
-fn snake_movement(
+fn snake_input(
     keyboard_input: Res<Input<KeyCode>>,
-    mut head_positions: Query<&mut Position, With<SnakeHead>>,
+    mut head_positions: Query<&mut SnakeDirection, With<SnakeHead>>,
 ) {
-    for mut pos in head_positions.iter_mut() {
+    for mut dir in head_positions.iter_mut() {
         match keyboard_input.get_pressed().next() {
-            Some(KeyCode::Left) => pos.x -= 1,
-            Some(KeyCode::Right) => pos.x += 1,
-            Some(KeyCode::Up) => pos.y += 1,
-            Some(KeyCode::Down) => pos.y -= 1,
+            Some(KeyCode::Left) => match *dir {
+                SnakeDirection::UP | SnakeDirection::DOWN => *dir = SnakeDirection::LEFT,
+                _ => {}
+            },
+            Some(KeyCode::Right) => match *dir {
+                SnakeDirection::UP | SnakeDirection::DOWN => *dir = SnakeDirection::RIGHT,
+                _ => {}
+            },
+            Some(KeyCode::Up) => match *dir {
+                SnakeDirection::LEFT | SnakeDirection::RIGHT => *dir = SnakeDirection::UP,
+                _ => {}
+            },
+            Some(KeyCode::Down) => match *dir {
+                SnakeDirection::LEFT | SnakeDirection::RIGHT => *dir = SnakeDirection::DOWN,
+                _ => {}
+            },
             _ => {}
         }
-    };
+    }
+}
+
+fn snake_movement(
+    mut head_positions: Query<(&mut Position, &SnakeDirection), With<SnakeHead>>,
+) {
+    for (mut pos, dir) in head_positions.iter_mut(){
+        match dir{
+            SnakeDirection::UP => pos.y += 1,
+            SnakeDirection::DOWN => pos.y -= 1,
+            SnakeDirection::LEFT => pos.x -= 1,
+            SnakeDirection::RIGHT => pos.x += 1,
+        }
+    }
 }
 // Control Snake   [2022-07-21 Thu]:1 ends here
 
@@ -135,4 +182,29 @@ fn position_translation(windows: Res<Windows>, mut q: Query<(&Position, &mut Tra
 
 // [[file:../literate-snake.org::*Food \[2022-07-22 Fri\]][Food   [2022-07-22 Fri]:1]]
 const FOOD_COLOR: Color = Color::rgb(1.0, 1.0, 1.0);
+
+#[derive(Component)]
+struct Food;
+
+fn food_spawner(mut commands: Commands, food_query: Query<&Food>) {
+    //If we already have a food on the screen, don't create another.
+    if let Ok(_) = food_query.get_single() { return; }
+
+    commands
+        .spawn_bundle(SpriteBundle {
+            sprite: Sprite {
+                color: FOOD_COLOR,
+                ..default()
+            },
+            ..default()
+        })
+        .insert(Food)
+        .insert(Position {
+            x: (random::<f32>() * ARENA_WIDTH as f32) as i32,
+            y: (random::<f32>() * ARENA_HEIGHT as f32) as i32,
+        })
+        .insert(Size::square(0.8));
+}
+
+fn eat_food(mut commands: Commands, positions_query: Query<&Position>){}
 // Food   [2022-07-22 Fri]:1 ends here
